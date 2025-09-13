@@ -1,0 +1,12 @@
+beliefmatching==0.1.1
+galois==0.4.6
+ldpc==2.3.6
+matplotlib==3.10.3
+networkx==3.4.2
+numpy==2.3.0
+pandas==2.3.0
+PyMatching==2.2.1
+qldpc==0.1.2
+seaborn==0.13.2
+stim==1.14.0
+tqdm==4.67.1
