@@ -1,31 +1,51 @@
-# Quantum Link‑Layer Protocol Simulation Code
+# Quantum Link-Layer Protocol Simulation Code
 
-This repository contains the simulation code accompanying our paper on **quantum link layer protocols**. It provides reference circuit implementations for multiple quantum codes and scripts to reproduce the three main experiments reported in the paper (error detection, error correction, and LEE vs. 2G comparisons).
+This repository contains the simulation code accompanying our paper on **quantum link-layer protocols**. It provides reference circuit implementations for multiple quantum codes, scripts to reproduce the experiments reported in the paper, and a hybrid error management framework that combines filtering and decoding strategies.
 
 > **At a glance**
 >
 > * **Codes implemented:** Surface code, Steane code, Repetition code
-> * **Artifacts:** Logical‑error calculators, plotting scripts, experiment drivers
+> * **Protocols:** Entanglement Distillation (ED), Entanglement Encoding (EE/LEE), QECC Transmission (SE), 2nd-Generation
+> * **Hybrid error management:** Syndrome-weight filter, Z-coset gap filter (MWPM's soft-output), neural-network filter/decoder 
+> * **Artifacts:** Logical-error calculators, plotting scripts, experiment drivers, pre-trained NN models
 
 ---
 
 ## Repository layout
 
 ```
-├── cals
-│   └── cal_logical_error.py         # Logical error estimation utilities
-├── circuits
-│   ├── DEJMPS.py                    # Entanglement distillation / DEJMPS circuit(s)
-│   ├── steane.py                    # Steane [[7,1,3]] code circuits
-│   └── surface.py                   # Surface‑code circuits
-├── experiments
-│   ├── error_correction_of_three_protocols
-│   │   └── plot_column_chart.py     # Reproduce EC comparison figure(s)
-│   ├── error_detection_of_three_codes
-│   │   └── plot_column_chart.py     # Reproduce ED comparison figure(s)
-│   └── LEE_and_2G
-│       └── compare_correction.py    # Compare LEE vs. 2nd‑Gen correction
-└── requirements.txt                 # Python dependencies
+.
+├── three-protocols/                         # Protocol comparison experiments
+│   ├── circuits/
+│   │   ├── DEJMPS.py                        # Entanglement distillation (DEJMPS) circuits
+│   │   ├── steane.py                        # Steane [[7,1,3]] code circuits
+│   │   └── surface.py                       # Surface code circuits
+│   ├── cals/
+│   │   └── cal_logical_error.py             # Logical error estimation utilities
+│   ├── experiments/
+│   │   ├── error_correction_of_three_protocols/
+│   │   │   └── plot_column_chart.py         # Reproduce EC comparison figures
+│   │   ├── error_detection_of_three_codes/
+│   │   │   └── plot_column_chart.py         # Reproduce ED comparison figures
+│   │   └── EE-T_and_2G/
+│   │       └── compare_correction.py        # Compare LEE vs. 2nd-Gen correction
+│   └── README.md
+│
+├── hybrid-error-management/                 # Hybrid filtering + decoding experiments
+│   ├── Model/
+│   │   ├── model.py                         # Transformer-based NN architecture
+│   │   └── model_d_{3,5,7,9,11}.pt         # Pre-trained model weights
+│   ├── surface.py                           # Surface code state encoding with parameterized noise
+│   ├── estimator_weight.py                  # Syndrome-weight (SW) filter
+│   ├── estimator_z.py                       # Z-coset gap (DS) filter
+│   ├── estimator_NN.py                      # Neural-network filter/decoder
+│   ├── estimator_swNN.py                    # SW filter + NN decoder (hybrid)
+│   ├── near_term_smallcode.py               # Small code (d=3) performance comparison
+│   ├── threshold_scan.py                    # Threshold scan across multiple code distances
+│   ├── plot_3d_landscape.py                 # 3D landscape visualization
+│   └── plot_running_time.py                 # Runtime benchmarking
+│
+└── requirements.txt                         # Python dependencies
 ```
 
 ---
@@ -50,51 +70,106 @@ conda activate qlink
 pip install -r requirements.txt
 ```
 
+**Note on PyTorch.** The `hybrid-error-management` experiments require PyTorch. If you need GPU support, install the appropriate CUDA variant following the [PyTorch installation guide](https://pytorch.org/get-started/locally/) before running `pip install -r requirements.txt`.
+
 ---
 
-## Core components
+## Part 1: Three Protocols (`three-protocols/`)
+
+This folder compares three quantum link-layer protocols across different codes.
 
 ### Circuits (`circuits/`)
 
-This folder defines the building blocks of quantum link‑layer protocols under different codes.
-
-* **`surface.py`** — Implements the surface code circuits, including logical state preparation and stabilizer measurement.
-* **`steane.py`** — Implements the Steane \[\[7,1,3]] code circuits.
-* **`DEJMPS.py`** — Implements entanglement distillation primitives (DEJMPS protocol).
-
-Together, these files define how each code encodes entanglement and performs error detection/correction at the circuit level.
+* **`surface.py`** -- Surface code circuits, including logical state preparation and stabilizer measurement.
+* **`steane.py`** -- Steane [[7,1,3]] code circuits.
+* **`DEJMPS.py`** -- Entanglement distillation primitives (DEJMPS protocol).
 
 ### Logical error calculators (`cals/`)
 
-* **`cal_logical_error.py`** — Provides routines for estimating logical error rates. It connects the abstract code definitions with protocol/noise settings, enabling evaluation of error performance under different physical error models.
+* **`cal_logical_error.py`** -- Estimates logical error rates under different protocol and noise settings. Supports PyMatching (MWPM) for the surface code and BP-LSD for the Steane code.
 
 ### Experiments (`experiments/`)
 
-Each subfolder corresponds to one experiment in the paper. They use the circuits and calculators to generate results.
+* **`error_correction_of_three_protocols/`** -- Reproduces error correction comparison figures across protocols.
+* **`error_detection_of_three_codes/`** -- Reproduces error detection comparison figures across codes.
+* **`EE-T_and_2G/`** -- Compares Localized Entanglement Encoding (LEE) against second-generation protocols.
 
-* **`error_correction_of_three_protocols/`** — Contains scripts for reproducing error correction comparison figures.
-* **`error_detection_of_three_codes/`** — Contains scripts for reproducing error detection comparison figures.
-* **`LEE_and_2G/`** — Contains scripts comparing Localized Entanglement Encoding (LEE) against second‑generation protocols.
+**Usage.** Navigate to the relevant experiment folder and run the Python script. Generated figures are saved locally as PDF files.
 
 ---
 
-## Usage
+## Part 2: Hybrid Error Management (`hybrid-error-management/`)
 
-The experiment scripts are directly runnable. They import the circuits and calculators internally, and produce plots (e.g., column charts) for comparison.
+This folder implements and evaluates hybrid error management strategies that combine a **filter** (to discard high-risk shots) with a **decoder** (to correct remaining errors).
 
-To reproduce results:
+### Filter / estimator modules
 
-1. Navigate to the relevant experiment folder.
-2. Run the provided Python script (e.g., `plot_column_chart.py`).
-3. Generated figures will be saved locally (PDF files).
+| Module | Method | Description |
+|---|---|---|
+| `estimator_weight.py` | Syndrome Weight (SW) | Accepts shots with normalized syndrome weight below a threshold. Decoder-agnostic. |
+| `estimator_z.py` | Z-Coset Gap (DS) | Computes the exact coset gap via DEM lifting. Accepts shots with large gap. |
+| `estimator_NN.py` | Neural Network (NN) | Uses a pre-trained transformer model to predict logical error probability. Can serve as both filter and decoder. |
+| `estimator_swNN.py` | SW + NN | Applies syndrome-weight filtering first, then decodes accepted shots with the NN. |
+
+### Neural network model (`Model/`)
+
+* **`model.py`** -- Transformer-based architecture with convolutional embedding, multi-head self-attention, and dilated 2D convolutions. Input shape: `(B, 3, d+1, d+1)`.
+* **`model_d_{3,5,7,9,11}.pt`** -- Pre-trained weights for code distances 3 through 11.
+
+### Experiment scripts
+
+#### `near_term_smallcode.py` -- Small code performance
+
+Compares all filter + decoder combinations at code distance d = 3 across a grid of local and transmission error rates and target acceptance rates.
+
+```bash
+cd hybrid-error-management
+python near_term_smallcode.py
+```
+
+#### `threshold_scan.py` -- Threshold scan
+
+Scans over multiple code distances and transmission error rates to identify threshold-like crossings for each estimator.
+
+```bash
+cd hybrid-error-management
+python threshold_scan.py --p-local 0.003 --d-list 3,5,7,9 --p-trans-grid 0.01,0.02,0.03,...,0.20
+```
+
+Key CLI arguments:
+* `--d-list` -- Code distances to sweep (default: `3,5,7,9`)
+* `--p-local` -- Fixed local error rate (required)
+* `--p-trans-grid` -- Transmission error rate grid
+* `--accept-list` -- Target acceptance rates (default: `0.10,0.20,0.40,0.80`)
+* `--nn-device` -- `cuda:0` or `cpu`
+* `--shots-cal`, `--shots-eval` -- Calibration and evaluation shot counts
+
+#### `plot_3d_landscape.py` -- 3D visualization
+
+Generates 3D surface/line plots of the (p_trans, acceptance rate, logical error rate) landscape from cached CSV data.
+
+```bash
+cd hybrid-error-management
+python plot_3d_landscape.py --data_dir <cache_dir> --d 3 --mode surface_lines
+```
+
+#### `plot_running_time.py` -- Runtime benchmarking
+
+Benchmarks per-shot filter scoring and decoding time for SW+MWPM, DS+MWPM, and DS+NN across multiple code distances.
+
+```bash
+cd hybrid-error-management
+python plot_running_time.py
+```
 
 ---
 
 ## Reproducibility checklist
 
-* Install dependencies from `requirements.txt` in a clean environment.
-* Use the same commit/tag corresponding to the paper.
-* Run each experiment script as described above to regenerate figures.
+1. Install dependencies from `requirements.txt` in a clean environment.
+2. Use the same commit/tag corresponding to the paper.
+3. For `three-protocols`: navigate to each experiment subfolder and run its script.
+4. For `hybrid-error-management`: run each experiment script as described above. Results are cached in CSV files for incremental computation.
 
 ---
 

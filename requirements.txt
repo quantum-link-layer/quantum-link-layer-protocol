@@ -9,4 +9,5 @@ PyMatching==2.2.1
 qldpc==0.1.2
 seaborn==0.13.2
 stim==1.14.0
+torch==2.8.0
 tqdm==4.67.1
