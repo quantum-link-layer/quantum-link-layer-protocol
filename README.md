@@ -24,11 +24,11 @@ This repository contains the simulation code accompanying our paper on **quantum
 │   │   └── cal_logical_error.py             # Logical error estimation utilities
 │   ├── experiments/
 │   │   ├── error_correction_of_three_protocols/
-│   │   │   └── plot_column_chart.py         # Reproduce EC comparison figures
+│   │   │   └── plot_column_chart.py         # Comparing the three protocols (ED, EE-T, SE) under error correction
 │   │   ├── error_detection_of_three_codes/
-│   │   │   └── plot_column_chart.py         # Reproduce ED comparison figures
+│   │   │   └── plot_column_chart.py         # Comparing different codes (repetition, surface, Steane) under error detection
 │   │   └── EE-T_and_2G/
-│   │       └── compare_correction.py        # Compare LEE vs. 2nd-Gen correction
+│   │       └── compare_correction.py        # Compare EE-T vs. 2nd-Gen correction
 │   └── README.md
 │
 ├── hybrid-error-management/                 # Hybrid filtering + decoding experiments
@@ -36,10 +36,10 @@ This repository contains the simulation code accompanying our paper on **quantum
 │   │   ├── model.py                         # Transformer-based NN architecture
 │   │   └── model_d_{3,5,7,9,11}.pt         # Pre-trained model weights
 │   ├── surface.py                           # Surface code state encoding with parameterized noise
-│   ├── estimator_weight.py                  # Syndrome-weight (SW) filter
-│   ├── estimator_z.py                       # Z-coset gap (DS) filter
-│   ├── estimator_NN.py                      # Neural-network filter/decoder
-│   ├── estimator_swNN.py                    # SW filter + NN decoder (hybrid)
+│   ├── estimator_weight.py                  # SW filter + PM decoder
+│   ├── estimator_z.py                       # DS filter + PM decoder
+│   ├── estimator_NN.py                      # DS filter + NN decoder
+│   ├── estimator_swNN.py                    # SW filter + NN decoder
 │   ├── near_term_smallcode.py               # Small code (d=3) performance comparison
 │   ├── threshold_scan.py                    # Threshold scan across multiple code distances
 │   ├── plot_3d_landscape.py                 # 3D landscape visualization
@@ -106,9 +106,9 @@ This folder implements and evaluates hybrid error management strategies that com
 
 | Module | Method | Description |
 |---|---|---|
-| `estimator_weight.py` | Syndrome Weight (SW) | Accepts shots with normalized syndrome weight below a threshold. Decoder-agnostic. |
-| `estimator_z.py` | Z-Coset Gap (DS) | Computes the exact coset gap via DEM lifting. Accepts shots with large gap. |
-| `estimator_NN.py` | Neural Network (NN) | Uses a pre-trained transformer model to predict logical error probability. Can serve as both filter and decoder. |
+| `estimator_weight.py` | SW + PM | Accepts shots with normalized syndrome weight below a threshold. Decoder-agnostic. |
+| `estimator_z.py` | DS + PM | Computes the exact coset gap via DEM lifting. Accepts shots with large gap. |
+| `estimator_NN.py` | DS + NN | Uses a pre-trained transformer model to predict logical error probability. Can serve as both filter and decoder. |
 | `estimator_swNN.py` | SW + NN | Applies syndrome-weight filtering first, then decodes accepted shots with the NN. |
 
 ### Neural network model (`Model/`)
